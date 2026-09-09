@@ -1,0 +1,46 @@
+{
+  "scenarios": [
+    {
+      "id": "scenario_500_recovery",
+      "name": "Downstream 500 Recovery",
+      "description": "Downstream verification returns HTTP 500. Gateway triggers exponential backoff and succeeds on subsequent attempt.",
+      "fault_type": "500",
+      "expected_behavior": "Retried with exponential backoff + jitter -> eventual success or DLQ"
+    },
+    {
+      "id": "scenario_429_rate_limit",
+      "name": "Downstream 429 Rate Limiting",
+      "description": "Downstream service sends 429 Too Many Requests. Worker pauses and backs off.",
+      "fault_type": "429",
+      "expected_behavior": "Retried with exponential delay"
+    },
+    {
+      "id": "scenario_timeout",
+      "name": "Upstream Gateway Timeout (504)",
+      "description": "Downstream server hangs. Worker times out after 3.0s threshold and safely retries.",
+      "fault_type": "timeout",
+      "expected_behavior": "Connection timeout detected -> retryable attempt recorded"
+    },
+    {
+      "id": "scenario_tampered_hmac",
+      "name": "Tampered HMAC Signature Rejection",
+      "description": "Incoming request payload is altered in transit. Gateway immediately rejects with 403 Forbidden.",
+      "fault_type": "invalid_signature",
+      "expected_behavior": "HTTP 403 Forbidden -> not queued to Redis"
+    },
+    {
+      "id": "scenario_duplicate_burst",
+      "name": "High-Frequency Duplicate Burst",
+      "description": "100 requests with identical provider and event_id sent in parallel.",
+      "fault_type": "duplicates",
+      "expected_behavior": "1 Accepted, 99 Marked DUPLICATE, 0 duplicate processing"
+    },
+    {
+      "id": "scenario_dlq_exhaustion",
+      "name": "Max Retries Exceeded -> DLQ Transition",
+      "description": "Unrecoverable downstream failure triggers 5 consecutive retries before moving event to DLQ.",
+      "fault_type": "dlq",
+      "expected_behavior": "Attempts 1-5 recorded -> status set to DLQ -> DLQ record created"
+    }
+  ]
+}

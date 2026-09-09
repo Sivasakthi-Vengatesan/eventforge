@@ -1,0 +1,85 @@
+@import url('https://db.onlinewebfonts.com/c/e66905e07608167a84e6ad52f638c3c6?family=Helvetica+Now+Var');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  font-family: 'Helvetica Now Var', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+:root {
+  --font-sans: 'Helvetica Now Var', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --color-amber-primary: #FF6A1A;
+  --color-amber-deep: #C94E0A;
+  --color-amber-subtle: #FFF0E6;
+  --color-surface-black: #050505;
+  --color-surface-light: #F7F7F5;
+  --color-text-muted: #8A8A8A;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: #F7F7F5;
+  color: #050505;
+  overflow-x: hidden;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.animate-blink {
+  animation: blink 1s step-end infinite;
+}
+
+/* --- SWISS TEXTURES & PATTERNS --- */
+
+/* 1. Subtle 24x24px Grid Pattern */
+.swiss-grid-pattern {
+  background-image: 
+    linear-gradient(to right, rgba(5, 5, 5, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(5, 5, 5, 0.04) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* 2. Dot Matrix (16x16px) */
+.swiss-dots {
+  background-image: radial-gradient(rgba(5, 5, 5, 0.08) 1px, transparent 1px);
+  background-size: 16px 16px;
+}
+
+/* 3. Diagonal Stripes (45deg) */
+.swiss-diagonal {
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(5, 5, 5, 0.03),
+    rgba(5, 5, 5, 0.03) 1px,
+    transparent 1px,
+    transparent 10px
+  );
+}
+
+/* 4. Swiss Noise Overlay */
+.swiss-noise {
+  background-image: radial-gradient(rgba(5,5,5,0.03) 15%, transparent 16%), radial-gradient(rgba(5,5,5,0.03) 15%, transparent 16%);
+  background-size: 4px 4px;
+}
+
+/* Custom Architectural Scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: #F7F7F5;
+  border-left: 1px solid #050505;
+}
+::-webkit-scrollbar-thumb {
+  background: #050505;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #FF6A1A;
+}

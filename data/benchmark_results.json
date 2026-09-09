@@ -1,0 +1,24 @@
+{
+  "timestamp": "2026-09-09T18:00:10.062394+00:00",
+  "event_count": 200,
+  "static_mode": {
+    "event_count": 200,
+    "duration_seconds": 17.69,
+    "throughput_req_per_sec": 11.3,
+    "critical_p95_ms": 14448.41,
+    "normal_p95_ms": 12759.08,
+    "success_count": 198,
+    "duplicate_count": 0,
+    "error_count": 2
+  },
+  "adaptive_mode": {
+    "event_count": 200,
+    "duration_seconds": 20.99,
+    "throughput_req_per_sec": 9.5,
+    "critical_p95_ms": 10532.08,
+    "normal_p95_ms": 15564.13,
+    "success_count": 198,
+    "duplicate_count": 0,
+    "error_count": 2
+  }
+}

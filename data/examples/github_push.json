@@ -1,0 +1,30 @@
+{
+  "ref": "refs/heads/main",
+  "before": "0000000000000000000000000000000000000000",
+  "after": "6dcb09b5b57875f334f61aebed695e2e4193db5e",
+  "repository": {
+    "id": 1296269,
+    "name": "eventforge",
+    "full_name": "eventforge/gateway",
+    "private": false,
+    "owner": {
+      "name": "octocat",
+      "email": "octocat@github.com"
+    }
+  },
+  "pusher": {
+    "name": "octocat",
+    "email": "octocat@github.com"
+  },
+  "commits": [
+    {
+      "id": "6dcb09b5b57875f334f61aebed695e2e4193db5e",
+      "message": "feat: async webhook gateway with consumer groups",
+      "timestamp": "2026-09-09T20:00:00Z",
+      "author": {
+        "name": "Octocat Engineer",
+        "email": "octocat@github.com"
+      }
+    }
+  ]
+}

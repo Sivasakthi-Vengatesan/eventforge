@@ -1,0 +1,23 @@
+{
+  "entity": "event",
+  "account_id": "acc_789456123",
+  "event": "payment.captured",
+  "contains": [
+    "payment"
+  ],
+  "payload": {
+    "payment": {
+      "entity": {
+        "id": "pay_Kjs83n49Fls92",
+        "amount": 499900,
+        "currency": "INR",
+        "status": "captured",
+        "order_id": "order_Hsd7392Ks82",
+        "method": "upi",
+        "email": "synthetic_buyer@eventforge.dev",
+        "contact": "+919999999999"
+      }
+    }
+  },
+  "created_at": 1718000000
+}
