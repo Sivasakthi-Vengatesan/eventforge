@@ -18,10 +18,21 @@ class Settings(BaseSettings):
         "DATABASE_URL", 
         "postgresql+asyncpg://postgres:postgres@localhost:5432/eventforge" if os.getenv("ENV") == "production" else "sqlite+aiosqlite:///./eventforge.db"
     )
+
+    @field_validator("DATABASE_URL", mode="before")
+    @classmethod
+    def normalize_db_url(cls, v: str) -> str:
+        if isinstance(v, str):
+            if v.startswith("postgres://"):
+                return v.replace("postgres://", "postgresql+asyncpg://", 1)
+            elif v.startswith("postgresql://") and not v.startswith("postgresql+"):
+                return v.replace("postgresql://", "postgresql+asyncpg://", 1)
+        return v
     
     # Redis Configuration
     REDIS_URL: str = os.getenv("REDIS_URL", "redis://localhost:6379/0")
     USE_EMBEDDED_STREAM_FALLBACK: bool = os.getenv("USE_EMBEDDED_STREAM_FALLBACK", "true").lower() in ["true", "1", "yes"]
+
     
     # Canonical Webhook Secrets (with backward compatible fallback)
     WEBHOOK_SECRET_STRIPE: str = os.getenv("WEBHOOK_SECRET_STRIPE") or os.getenv("STRIPE_WEBHOOK_SECRET") or "whsec_stripe_test_secret_38472948"
