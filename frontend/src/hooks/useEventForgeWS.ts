@@ -9,12 +9,28 @@ export function useEventForgeWS(onEventReceived?: (data: any) => void) {
 
   const connect = useCallback(() => {
     try {
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const host = window.location.port === '3000' ? '127.0.0.1:8000' : window.location.host;
-      const wsUrl = `${protocol}//${host}/ws/monitor`;
+      let wsUrl: string;
+      
+      const customWsUrl = import.meta.env.VITE_WS_URL;
+      const customApiUrl = import.meta.env.VITE_API_URL;
+
+      if (customWsUrl) {
+        wsUrl = customWsUrl;
+      } else if (customApiUrl) {
+        const clean = customApiUrl.replace(/^http:\/\//i, 'ws://').replace(/^https:\/\//i, 'wss://').replace(/\/+$/, '');
+        wsUrl = `${clean}/ws/monitor`;
+      } else {
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        if (window.location.port === '5173' || window.location.port === '3000') {
+          wsUrl = `${protocol}//${window.location.hostname}:8000/ws/monitor`;
+        } else {
+          wsUrl = `${protocol}//${window.location.host}/ws/monitor`;
+        }
+      }
 
       const ws = new WebSocket(wsUrl);
       wsRef.current = ws;
+
 
       ws.onopen = () => {
         setIsConnected(true);
