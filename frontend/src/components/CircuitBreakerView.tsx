@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CircuitBreakerStatus, CircuitBreakerState } from '../types';
+import { API_BASE } from '../lib/api';
 
 export const CircuitBreakerView: React.FC = () => {
   const [status, setStatus] = useState<CircuitBreakerStatus | null>(null);
@@ -14,7 +15,7 @@ export const CircuitBreakerView: React.FC = () => {
 
   const fetchStatus = async () => {
     try {
-      const res = await fetch('/api/v1/downstream/status');
+      const res = await fetch(`${API_BASE}/downstream/status`);
       if (res.ok) {
         const data = await res.json();
         setStatus(data.circuit_breaker);
@@ -38,7 +39,7 @@ export const CircuitBreakerView: React.FC = () => {
   const handleUpdateFaults = async () => {
     setIsInjecting(true);
     try {
-      const res = await fetch('/api/v1/downstream/config', {
+      const res = await fetch(`${API_BASE}/downstream/config`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -61,7 +62,7 @@ export const CircuitBreakerView: React.FC = () => {
 
   const handleResetCircuit = async () => {
     try {
-      const res = await fetch('/api/v1/downstream/circuit-breaker/reset', {
+      const res = await fetch(`${API_BASE}/downstream/circuit-breaker/reset`, {
         method: 'POST'
       });
       if (res.ok) {

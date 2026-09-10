@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Play, Zap, ShieldAlert, Copy, RefreshCw, AlertTriangle, CheckCircle2, Terminal } from 'lucide-react';
-import { ingestSampleWebhook } from '../lib/api';
+import { ingestSampleWebhook, API_BASE } from '../lib/api';
 
 export const LiveGenerator: React.FC = () => {
   const [running, setRunning] = useState(false);
@@ -46,7 +46,7 @@ export const LiveGenerator: React.FC = () => {
     setRunning(true);
     appendLog('TRANSMITTING PAYLOAD WITH FORGED HMAC SIGNATURE...');
     try {
-      const res = await fetch('/api/v1/webhooks/stripe', {
+      const res = await fetch(`${API_BASE}/webhooks/stripe`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

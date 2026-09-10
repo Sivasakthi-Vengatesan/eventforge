@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SystemMetrics, SystemMode, PolicyDecisionItem } from '../types';
+import { API_BASE } from '../lib/api';
 
 interface AdaptivePolicyViewProps {
   metrics: SystemMetrics | null;
@@ -14,7 +15,7 @@ export const AdaptivePolicyView: React.FC<AdaptivePolicyViewProps> = ({ metrics 
 
   const fetchDecisions = async () => {
     try {
-      const res = await fetch('/api/v1/policies/decisions?limit=10');
+      const res = await fetch(`${API_BASE}/policies/decisions?limit=10`);
       if (res.ok) {
         const data = await res.json();
         setDecisions(data);
@@ -35,17 +36,18 @@ export const AdaptivePolicyView: React.FC<AdaptivePolicyViewProps> = ({ metrics 
     setStatusMessage(null);
     try {
       if (mode === 'AUTO') {
-        const res = await fetch('/api/v1/policies/auto', { method: 'POST' });
+        const res = await fetch(`${API_BASE}/policies/auto`, { method: 'POST' });
         if (res.ok) {
           setSelectedMode('AUTO');
           setStatusMessage('SYSTEM RETURNED TO DYNAMIC AUTONOMOUS EVALUATION');
         }
       } else {
-        const res = await fetch('/api/v1/policies/override', {
+        const res = await fetch(`${API_BASE}/policies/override`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ mode }),
         });
+
         if (res.ok) {
           setSelectedMode(mode);
           setStatusMessage(`MANUAL OVERRIDE APPLIED: ${mode} MODE ENFORCED`);

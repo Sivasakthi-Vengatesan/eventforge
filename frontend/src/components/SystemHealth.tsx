@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Server, Database, Radio, Cpu, CheckCircle2, AlertCircle } from 'lucide-react';
+import { API_BASE } from '../lib/api';
 
 export const SystemHealth: React.FC<{ isWsConnected: boolean }> = ({ isWsConnected }) => {
   const [health, setHealth] = useState<any>(null);
 
   const fetchHealth = async () => {
     try {
-      const res = await fetch('/api/v1/health');
+      const res = await fetch(`${API_BASE}/health`);
       if (res.ok) {
         setHealth(await res.json());
       }
