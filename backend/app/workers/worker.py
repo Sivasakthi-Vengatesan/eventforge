@@ -1,6 +1,6 @@
 import asyncio
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -125,12 +125,17 @@ class AsyncEventWorker:
             duration_ms = round((time.time() - start_ts) * 1000, 2)
             self.processed_count += 1
             self.total_duration_ms += duration_ms
-            metrics_collector.record_event_completion(duration_ms)
+            metrics_collector.record_event_completion(
+                duration_ms=duration_ms,
+                is_success=is_success,
+                status_code=status_code or (200 if is_success else 500)
+            )
 
             if is_success:
                 self.success_count += 1
                 event.status = EventStatus.SUCCESS.value
                 event.completed_at = utc_now()
+                event.next_retry_at = None
                 event.processing_duration_ms = duration_ms
                 event.error_message = None
                 await session.commit()
@@ -152,22 +157,35 @@ class AsyncEventWorker:
                 # Check retry policy
                 if is_retryable and retry_count < event.max_retries:
                     new_retry_count = retry_count + 1
-                    event.status = EventStatus.RETRYING.value
-                    event.retry_count = new_retry_count
-                    event.error_message = error_msg
-                    await session.commit()
-
                     base_delay = retry_service.calculate_backoff_delay(new_retry_count)
                     # Apply adaptive retry multiplier
                     delay = base_delay * policy_engine.controller.current_retry_multiplier
-                    logger.warning(f"Event {event_id} failed. Scheduling adaptive retry {new_retry_count}/{event.max_retries} in {delay:.2f}s (Multiplier: {policy_engine.controller.current_retry_multiplier}x): {error_msg}")
+                    next_retry_time = utc_now() + timedelta(seconds=delay)
                     
-                    # ACK current stream message and schedule re-enqueue after delay
+                    event.status = EventStatus.RETRYING.value
+                    event.retry_count = new_retry_count
+                    event.next_retry_at = next_retry_time
+                    event.error_message = error_msg
+                    await session.commit()
+
+                    metrics_collector.record_retry()
+                    logger.warning(f"Event {event_id} failed. Scheduling durable retry {new_retry_count}/{event.max_retries} at {next_retry_time.isoformat()} in {delay:.2f}s (Multiplier: {policy_engine.controller.current_retry_multiplier}x): {error_msg}")
+                    
+                    # ACK current stream message and schedule in-flight retry task with fallback to durable poller
                     await stream_manager.ack_event(stream_msg_id)
                     
                     async def delayed_requeue(delay_sec: float, evt_id: str, prov: str, evt_type: str, pl: dict, retries: int):
                         await asyncio.sleep(delay_sec)
-                        await stream_manager.push_event(evt_id, prov, evt_type, pl, retry_count=retries)
+                        async with AsyncSessionLocal() as requeue_session:
+                            stmt_chk = select(Event).where(Event.provider == prov, Event.event_id == evt_id)
+                            res_chk = await requeue_session.execute(stmt_chk)
+                            ev_chk = res_chk.scalar_one_or_none()
+                            if ev_chk and ev_chk.status == EventStatus.RETRYING.value:
+                                ev_chk.status = EventStatus.QUEUED.value
+                                ev_chk.queued_at = utc_now()
+                                ev_chk.next_retry_at = None
+                                await requeue_session.commit()
+                                await stream_manager.push_event(evt_id, prov, evt_type, pl, retry_count=retries)
 
                     asyncio.create_task(delayed_requeue(delay, event_id, provider, event_type, event.payload, new_retry_count))
 

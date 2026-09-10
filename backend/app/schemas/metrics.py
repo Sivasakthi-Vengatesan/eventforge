@@ -55,6 +55,17 @@ class SystemMetricsSummary(BaseModel):
     p50_latency_ms: float
     p95_latency_ms: float
     p99_latency_ms: float
+    error_rate: Optional[float] = 0.0
+    retry_rate: Optional[float] = 0.0
+    http_429_rate: Optional[float] = 0.0
+    current_mode: Optional[str] = "NORMAL"
+    circuit_breaker_state: Optional[str] = "CLOSED"
+    delayed_count: Optional[int] = 0
+    throttled_count: Optional[int] = 0
+    batched_count: Optional[int] = 0
+    priority_distribution: Optional[Dict[str, int]] = None
+    timestamp: Optional[str] = None
+
 
 class HealthCheckResponse(BaseModel):
     status: str

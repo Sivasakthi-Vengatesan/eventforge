@@ -137,13 +137,32 @@ class InMemoryStreamEngine:
 
 _in_memory_stream_engine = InMemoryStreamEngine()
 _redis_client: Optional[aioredis.Redis] = None
+_redis_client_loop: Optional[asyncio.AbstractEventLoop] = None
 _is_using_embedded = False
 
 async def get_redis_client() -> Tuple[Any, bool]:
-    """Returns (client, is_embedded) supporting both real Redis and fallback engine."""
-    global _redis_client, _is_using_embedded
+    """
+    Returns (client, is_embedded) supporting both real Redis and the fallback engine.
+    Ensures Redis client connection pool is cleanly bound to the current running event loop.
+    """
+    global _redis_client, _redis_client_loop, _is_using_embedded
+    
+    current_loop = asyncio.get_running_loop()
+    
+    # If a client exists, verify it belongs to the active running event loop
     if _redis_client is not None:
-        return _redis_client, False
+        if _redis_client_loop is current_loop and not current_loop.is_closed():
+            return _redis_client, False
+        else:
+            # Client was created on a previous or closed loop; close and reset
+            try:
+                if _redis_client_loop and not _redis_client_loop.is_closed():
+                    await _redis_client.aclose()
+            except Exception:
+                pass
+            _redis_client = None
+            _redis_client_loop = None
+
     if _is_using_embedded:
         return _in_memory_stream_engine, True
 
@@ -156,11 +175,39 @@ async def get_redis_client() -> Tuple[Any, bool]:
         )
         await client.ping()
         _redis_client = client
+        _redis_client_loop = current_loop
+        _is_using_embedded = False
         logger.info("Connected to external Redis server", extra={"redis_url": settings.REDIS_URL})
         return _redis_client, False
     except Exception as e:
+        if not settings.USE_EMBEDDED_STREAM_FALLBACK:
+            logger.error(f"External Redis unavailable at {settings.REDIS_URL} and fallback is disabled: {e}")
+            raise ConnectionError(f"External Redis unavailable at {settings.REDIS_URL}") from e
+            
         logger.warning(
             f"External Redis unavailable ({e}). Initializing embedded Redis Streams engine for high-performance zero-dependency execution."
         )
         _is_using_embedded = True
         return _in_memory_stream_engine, True
+
+async def close_redis():
+    """Cleanly closes active Redis client connection pool."""
+    global _redis_client, _redis_client_loop
+    if _redis_client is not None:
+        try:
+            await _redis_client.aclose()
+        except Exception as e:
+            logger.warning(f"Error closing Redis client: {e}")
+        finally:
+            _redis_client = None
+            _redis_client_loop = None
+
+def reset_redis_state():
+    """Resets client reference, embedded flag, and in-memory streams (used in test fixtures)."""
+    global _redis_client, _redis_client_loop, _is_using_embedded, _in_memory_stream_engine
+    _redis_client = None
+    _redis_client_loop = None
+    _is_using_embedded = False
+    _in_memory_stream_engine = InMemoryStreamEngine()
+
+

@@ -32,7 +32,16 @@ async def init_db():
     logger.info("Initializing database tables...", extra={"database_url": settings.DATABASE_URL})
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        if settings.DATABASE_URL.startswith("sqlite"):
+            try:
+                res = await conn.exec_driver_sql("PRAGMA table_info(events)")
+                cols = [row[1] for row in res.fetchall()]
+                if cols and "next_retry_at" not in cols:
+                    await conn.exec_driver_sql("ALTER TABLE events ADD COLUMN next_retry_at DATETIME")
+            except Exception as e:
+                logger.debug(f"SQLite schema migration check: {e}")
     logger.info("Database tables initialized successfully.")
+
 
 from contextlib import asynccontextmanager
 

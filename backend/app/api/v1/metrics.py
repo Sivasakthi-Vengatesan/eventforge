@@ -45,20 +45,49 @@ async def health_check(db: AsyncSession = Depends(get_db)):
 
 @router.get("/health/redis", summary="Redis health endpoint")
 async def redis_health():
-    client, is_embedded = await get_redis_client()
-    return {
-        "status": "HEALTHY",
-        "mode": "EMBEDDED_STREAM_ENGINE" if is_embedded else "REDIS_SERVER",
-        "timestamp": datetime.now(timezone.utc).isoformat()
-    }
+    try:
+        client, is_embedded = await get_redis_client()
+        if not is_embedded:
+            await client.ping()
+            return {
+                "status": "HEALTHY",
+                "mode": "REDIS_SERVER",
+                "connected": True,
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            }
+        else:
+            return {
+                "status": "HEALTHY (EMBEDDED)",
+                "mode": "EMBEDDED_STREAM_ENGINE",
+                "connected": False,
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            }
+    except Exception as e:
+        return {
+            "status": "UNHEALTHY",
+            "mode": "UNAVAILABLE",
+            "connected": False,
+            "error": str(e),
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
 
 @router.get("/health/database", summary="Database health endpoint")
 async def db_health(db: AsyncSession = Depends(get_db)):
-    await db.execute(text("SELECT 1"))
-    return {
-        "status": "HEALTHY",
-        "timestamp": datetime.now(timezone.utc).isoformat()
-    }
+    try:
+        await db.execute(text("SELECT 1"))
+        return {
+            "status": "HEALTHY",
+            "connected": True,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+    except Exception as e:
+        return {
+            "status": "UNHEALTHY",
+            "connected": False,
+            "error": str(e),
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+
 
 @router.get("/system/stats", summary="Comprehensive system telemetry")
 async def system_stats():

@@ -53,6 +53,7 @@ class Event(Base):
     queued_at = Column(DateTime(timezone=True), nullable=True)
     started_at = Column(DateTime(timezone=True), nullable=True)
     completed_at = Column(DateTime(timezone=True), nullable=True)
+    next_retry_at = Column(DateTime(timezone=True), nullable=True, index=True)
     
     processing_duration_ms = Column(Float, nullable=True)
     error_message = Column(Text, nullable=True)

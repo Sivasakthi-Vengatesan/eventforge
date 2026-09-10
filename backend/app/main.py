@@ -6,6 +6,7 @@ from backend.app.core.config import settings
 from backend.app.core.logging import logger
 from backend.app.database.connection import init_db
 from backend.app.queue.stream_manager import stream_manager
+from backend.app.queue.redis_client import close_redis
 from backend.app.workers.manager import worker_manager
 from backend.app.monitoring.metrics_collector import metrics_collector
 from backend.app.monitoring.websocket_manager import ws_manager
@@ -35,7 +36,9 @@ async def lifespan(app: FastAPI):
     await policy_engine.stop()
     await worker_manager.stop_pool()
     metrics_collector.stop()
+    await close_redis()
     logger.info("Shutdown complete.")
+
 
 
 app = FastAPI(

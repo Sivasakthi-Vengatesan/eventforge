@@ -2,7 +2,7 @@ import asyncio
 from datetime import datetime, timezone
 from typing import Optional, Tuple
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.exc import IntegrityError
 from backend.app.models.event import Event, IdempotencyRecord, EventStatus
 from backend.app.core.logging import logger
@@ -27,9 +27,9 @@ class IdempotencyService:
     ) -> Tuple[bool, Event]:
         """
         Atomically inspects if (provider, event_id) exists.
-        If duplicate: updates duplicate counter and returns (True, existing_event).
+        If duplicate: atomically increments duplicate counter and returns (True, existing_event).
         If new: creates and flushes Event & IdempotencyRecord, returning (False, new_event).
-        Protects against race conditions on concurrent identical bursts.
+        Protects against race conditions on concurrent identical bursts using DB unique constraint and atomic increments.
         """
         idempotency_key = f"{provider}:{event_id}"
         
@@ -39,23 +39,36 @@ class IdempotencyService:
         existing_event = result.scalar_one_or_none()
 
         if existing_event:
-            existing_event.is_duplicate = True
-            existing_event.duplicate_count += 1
+            update_stmt = (
+                update(Event)
+                .where(Event.provider == provider, Event.event_id == event_id)
+                .values(
+                    is_duplicate=True,
+                    duplicate_count=Event.duplicate_count + 1
+                )
+            )
+            await db.execute(update_stmt)
             
-            rec_stmt = select(IdempotencyRecord).where(IdempotencyRecord.key == idempotency_key)
-            rec_res = await db.execute(rec_stmt)
-            rec = rec_res.scalar_one_or_none()
-            if rec:
-                rec.hits += 1
-                rec.last_seen_at = utc_now()
-                
+            rec_update = (
+                update(IdempotencyRecord)
+                .where(IdempotencyRecord.key == idempotency_key)
+                .values(
+                    hits=IdempotencyRecord.hits + 1,
+                    last_seen_at=utc_now()
+                )
+            )
+            await db.execute(rec_update)
             await db.commit()
-            await db.refresh(existing_event)
+            
+            stmt_ref = select(Event).where(Event.provider == provider, Event.event_id == event_id)
+            res_ref = await db.execute(stmt_ref)
+            updated_event = res_ref.scalar_one()
+            
             logger.info(
-                f"Duplicate event detected for {provider}:{event_id} (seen {existing_event.duplicate_count} times)",
+                f"Duplicate event detected for {provider}:{event_id} (seen {updated_event.duplicate_count} times)",
                 extra={"event_id": event_id, "provider": provider, "status": "DUPLICATE"}
             )
-            return True, existing_event
+            return True, updated_event
 
         # 2. Try to insert new event
         try:
@@ -90,16 +103,34 @@ class IdempotencyService:
             return False, new_event
         except IntegrityError:
             await db.rollback()
-            # Concurrent duplicate won the race; re-fetch and treat as duplicate
+            # Concurrent duplicate won the race; atomically increment duplicate_count
+            update_stmt = (
+                update(Event)
+                .where(Event.provider == provider, Event.event_id == event_id)
+                .values(
+                    is_duplicate=True,
+                    duplicate_count=Event.duplicate_count + 1
+                )
+            )
+            await db.execute(update_stmt)
+            
+            rec_update = (
+                update(IdempotencyRecord)
+                .where(IdempotencyRecord.key == idempotency_key)
+                .values(
+                    hits=IdempotencyRecord.hits + 1,
+                    last_seen_at=utc_now()
+                )
+            )
+            await db.execute(rec_update)
+            await db.commit()
+
             stmt2 = select(Event).where(Event.provider == provider, Event.event_id == event_id)
             res2 = await db.execute(stmt2)
             concurrent_event = res2.scalar_one_or_none()
             if concurrent_event:
-                concurrent_event.is_duplicate = True
-                concurrent_event.duplicate_count += 1
-                await db.commit()
-                await db.refresh(concurrent_event)
                 return True, concurrent_event
             raise
+
 
 idempotency_service = IdempotencyService()

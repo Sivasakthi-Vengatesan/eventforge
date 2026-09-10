@@ -129,16 +129,20 @@ class AdaptivePolicyEngine:
         # Broadcast policy transition via WebSockets
         if self._ws_manager:
             try:
-                await self._ws_manager.broadcast({
-                    "type": "POLICY_TRANSITION",
-                    "data": {
+                await self._ws_manager.broadcast(
+                    "POLICY_TRANSITION",
+                    {
                         "previous_mode": prev_mode,
                         "new_mode": decision.new_mode,
                         "reason": decision.reason,
+                        "triggering_metric": decision.triggering_metric,
+                        "observed_value": decision_data["observed_value"],
+                        "threshold": decision_data["threshold"],
+                        "action": decision.action_summary,
                         "actions": actions,
                         "timestamp": decision_data["timestamp"]
                     }
-                })
+                )
             except Exception as e:
                 logger.error(f"Failed to broadcast policy transition: {e}")
 

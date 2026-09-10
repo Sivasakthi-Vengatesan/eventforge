@@ -12,11 +12,11 @@
 
 ```
 [ Upstream Webhooks ] (Stripe, GitHub, Razorpay, Generic)
-       │ HTTP POST (<10ms Budget)
+       │ HTTP POST (Measured <10ms Budget)
        ▼
 [ FastAPI Ingestion Gateway ]
        ├── 1. HMAC-SHA256 Cryptographic Verification (Constant-time + Replay Window)
-       ├── 2. Atomic Idempotency Check (SELECT ... FOR UPDATE)
+       ├── 2. Atomic Idempotency Filter (DB Uniqueness Constraint + Atomic Upsert)
        └── 3. Priority Classifier (CRITICAL, HIGH, NORMAL, LOW)
        │
        ▼ (Zero in-flight processing)
@@ -28,7 +28,7 @@
   - Real-Time Telemetry Monitor             - Worker Fleet (2 ↔ 8 Cores Elastic)
   - Finite State Machine (4 Modes)          - Priority Channel Routing
   - Dynamic Concurrency Actuation           - PEL Auto-Claim & Orphan Rescue
-  - Downstream Circuit Breaker Supervisor   - Exp Backoff with Jitter (1.0x - 3.0x)
+  - Downstream Circuit Breaker Supervisor   - Exp Backoff with Full Jitter (1.0x - 3.0x)
        │                                           │
        ▼                                           ▼
 [ Explainable Decision Ledger ]           [ PostgreSQL / SQLite ACID Store ]
@@ -57,9 +57,10 @@ Unlike static worker pools that choke during traffic spikes or pound failing API
 - **`HALF_OPEN`**: Tests trial probes after a 5.0s cooldown before restoring full traffic.
 
 ### 4. Zero-Loss Ingestion & Idempotency Filter
-- Ingestion SLA: Returns `HTTP 202 Accepted` in **`<10ms`**.
-- Atomic idempotency check prevents duplicate processing during upstream webhook retries.
-- Redis Streams Pending Entries List (PEL) reclamation guarantees orphaned messages are recovered if a worker node crashes.
+- Ingestion SLA: Returns `HTTP 202 Accepted` with actual measured processing duration.
+- Atomic idempotency check with composite unique constraint `(provider, event_id)` prevents duplicate processing during upstream webhook retries.
+- Redis Streams Pending Entries List (PEL) auto-claim guarantees orphaned messages are recovered if a worker node crashes.
+- Durable retry scheduler in PostgreSQL guarantees scheduled retries persist across process restarts.
 
 ---
 
@@ -107,19 +108,6 @@ The web interface is built following strict **Swiss International (International
 - Live WebSocket telemetry updates (`ws://127.0.0.1:8000/ws/monitor`).
 - Interactive Chaos Control and Manual Policy Override testbenches.
 
-### Dashboard Sections
-- **`01. ARCHITECTURE`**: System design specification and component pipeline.
-- **`02. ADAPTIVE POLICY ENGINE`**: Real-time mode indicators, concurrency dials, and decision audit logs.
-- **`03. PRIORITY QUEUE`**: 4-tier distribution matrix and safety invariants.
-- **`04. TELEMETRY`**: Live event throughput and P50/P95/P99 latency graphs.
-- **`05. WORKER FLEET`**: Redis Streams consumer group states and worker heartbeat status.
-- **`06. CIRCUIT BREAKER`**: 3-state machine visualizer and downstream fault injection sliders.
-- **`07. AUDIT TRAIL`**: Real-time event ledger and payload inspector.
-- **`08. EMPIRICAL BENCHMARK`**: Side-by-side static vs adaptive comparison matrix.
-- **`09. FAULT ISOLATION`**: Dead letter queue quarantine and manual replay controls.
-- **`10. SIMULATION SUITE`**: Multi-scenario traffic burst generator.
-- **`11. INFRASTRUCTURE`**: Subsystem diagnostic health checks.
-
 ---
 
 ## 🚀 Quickstart Guide
@@ -127,32 +115,44 @@ The web interface is built following strict **Swiss International (International
 ### Prerequisites
 - Python 3.12+
 - Node.js 18+ and npm
+- (Optional) Docker and Docker Compose
 
-### 1. Start the Backend API & Adaptive Engine
+### Option A: Local Development
+
+#### 1. Start the Backend API & Adaptive Engine
 ```bash
 cd backend
 pip install -r requirements.txt
 python -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
-### 2. Start the Frontend Dashboard
+#### 2. Start the Frontend Dashboard
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
-Open [http://127.0.0.1:5174/](http://127.0.0.1:5174/) in your browser.
+Open [http://127.0.0.1:5173/](http://127.0.0.1:5173/) in your browser.
+
+### Option B: Full Docker Stack (PostgreSQL + Redis + Backend + Frontend)
+```bash
+docker compose up --build
+```
+- **Frontend Dashboard**: [http://localhost:3000/](http://localhost:3000/)
+- **Backend API & Swagger Docs**: [http://localhost:8000/docs](http://localhost:8000/docs)
+- **Live WebSocket Monitor**: `ws://localhost:8000/ws/monitor`
 
 ### 3. Run Automated Tests
 ```bash
 python -m pytest backend/tests -v
 ```
-*Executes 25 comprehensive test cases covering HMAC verification, idempotency, retries, DLQ lifecycle, adaptive transitions, and circuit breaking.*
+*Executes 33 comprehensive test cases covering HMAC verification, concurrent idempotency bursts, durable retries, worker crash recovery, DLQ quarantine, adaptive transitions, and circuit breaking.*
 
 ### 4. Run Benchmark Suite
 ```bash
 python scripts/benchmark.py --events 200
 ```
+
 
 ---
 

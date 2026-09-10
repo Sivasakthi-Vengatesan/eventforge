@@ -1,4 +1,5 @@
 import json
+import time
 import uuid
 from datetime import datetime, timezone
 from fastapi import APIRouter, Request, Depends, HTTPException, status, Header
@@ -45,6 +46,7 @@ async def ingest_webhook(
     request: Request,
     db: AsyncSession = Depends(get_db)
 ):
+    start_time = time.perf_counter()
     raw_body = await request.body()
     headers = dict(request.headers)
 
@@ -121,6 +123,8 @@ async def ingest_webhook(
     event_record.queued_at = datetime.now(timezone.utc)
     await db.commit()
 
+    elapsed_ms = round((time.perf_counter() - start_time) * 1000, 2)
+
     # 6. Real-Time Observability Broadcast
     await ws_manager.broadcast("EVENT_RECEIVED", {
         "event_id": event_id,
@@ -132,7 +136,7 @@ async def ingest_webhook(
         "received_at": now_iso
     })
 
-    logger.info(f"Webhook {provider}:{event_id} [{priority}] accepted and queued to stream in <5ms.")
+    logger.info(f"Webhook {provider}:{event_id} [{priority}] accepted and queued to stream in {elapsed_ms}ms.")
 
     # 7. Fast HTTP 202 Accepted Response
     return WebhookIngestResponse(
@@ -141,6 +145,7 @@ async def ingest_webhook(
         provider=provider,
         event_type=event_type,
         received_at=now_iso,
-        message=f"Webhook [{priority}] accepted, validated, and queued for asynchronous processing."
+        message=f"Webhook [{priority}] accepted, validated, and queued for asynchronous processing in {elapsed_ms}ms."
     )
+
 

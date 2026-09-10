@@ -23,6 +23,7 @@ class MetricsCollector:
         self.processed_timestamps: deque = deque(maxlen=1000)
         self.recent_errors: deque = deque(maxlen=200)
         self.recent_429s: deque = deque(maxlen=200)
+        self.recent_retries: deque = deque(maxlen=200)
         self.is_running = False
         self._task: asyncio.Task = None
 
@@ -32,6 +33,10 @@ class MetricsCollector:
         self.processed_timestamps.append(now)
         self.recent_errors.append(0 if is_success else 1)
         self.recent_429s.append(1 if status_code == 429 else 0)
+
+    def record_retry(self):
+        """Records an actual retry event occurrence."""
+        self.recent_retries.append(time.time())
 
     def calculate_percentiles(self) -> Dict[str, float]:
         if not self.recent_latencies:
@@ -61,6 +66,16 @@ class MetricsCollector:
             return 0.0
         return round(sum(self.recent_429s) / len(self.recent_429s), 3)
 
+    def get_retry_rate(self) -> float:
+        now = time.time()
+        # Retries in the recent 10s window vs recent completions
+        recent_r = [t for t in self.recent_retries if now - t <= 10.0]
+        recent_p = [t for t in self.processed_timestamps if now - t <= 10.0]
+        if not recent_p and not recent_r:
+            return 0.0
+        denominator = max(1, len(recent_p))
+        return min(1.0, round(len(recent_r) / denominator, 3))
+
     async def get_system_metrics(self) -> Dict[str, Any]:
         async with AsyncSessionLocal() as session:
             # Query counts
@@ -88,13 +103,14 @@ class MetricsCollector:
         throughput = self.get_throughput()
         error_rate = self.get_error_rate()
         http_429_rate = self.get_429_rate()
+        retry_rate = self.get_retry_rate()
         
         success_rate = round((success_count / total_events * 100.0) if total_events > 0 else 100.0, 1)
 
         cb = get_circuit_breaker()
         policy_engine = get_policy_engine()
 
-        # Update Policy Engine telemetry
+        # Update Policy Engine telemetry with real metrics
         priority_dist = {"CRITICAL": p_crit, "HIGH": p_high, "NORMAL": p_norm, "LOW": p_low}
         policy_engine.state_manager.update_metrics(
             queue_depth=queue_stats.get("queue_depth", 0),
@@ -105,7 +121,7 @@ class MetricsCollector:
             p95=percentiles["p95"],
             p99=percentiles["p99"],
             error_rate=error_rate,
-            retry_rate=error_rate,
+            retry_rate=retry_rate,
             http_429_rate=http_429_rate,
             active_workers=active_workers,
             priority_counts=priority_dist,
@@ -129,6 +145,7 @@ class MetricsCollector:
             "p95_latency_ms": percentiles["p95"],
             "p99_latency_ms": percentiles["p99"],
             "error_rate": error_rate,
+            "retry_rate": retry_rate,
             "http_429_rate": http_429_rate,
             "current_mode": policy_engine.current_mode,
             "circuit_breaker_state": cb.state,
