@@ -47,7 +47,7 @@ export const SystemHealth: React.FC<{ isWsConnected: boolean }> = ({ isWsConnect
     {
       idx: '04',
       name: 'WebSocket Observability Push',
-      status: isWsConnected ? 'CONNECTED (127.0.0.1)' : 'RECONNECTING...',
+      status: isWsConnected ? 'LIVE STREAM ACTIVE' : 'RECONNECTING...',
       icon: Server,
       desc: 'Low-latency binary/JSON streaming telemetry pipeline broadcast at /ws/monitor.',
     },

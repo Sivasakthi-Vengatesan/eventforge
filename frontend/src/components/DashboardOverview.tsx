@@ -48,7 +48,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ metrics, i
               isConnected ? 'bg-black text-white' : 'bg-[#FF3000] text-white animate-pulse'
             }`}>
               <span className={`w-2 h-2 ${isConnected ? 'bg-[#FF3000]' : 'bg-white'}`} />
-              {isConnected ? 'WS CONNECTED (127.0.0.1:8000)' : 'WS RECONNECTING...'}
+              {isConnected ? 'WS LIVE TELEMETRY STREAM' : 'WS RECONNECTING...'}
             </div>
           </div>
         </div>
