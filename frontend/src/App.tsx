@@ -14,6 +14,8 @@ import { LiveGenerator } from './components/LiveGenerator';
 import { SystemHealth } from './components/SystemHealth';
 import { useEventForgeWS } from './hooks/useEventForgeWS';
 
+import { SwissLandingPage } from './components/landing/SwissLandingPage';
+
 export function App() {
   const [currentView, setCurrentView] = useState<'landing' | 'dashboard'>('landing');
 
@@ -45,9 +47,9 @@ export function App() {
     }
   };
 
-  // If in landing view, show ONLY the requested full-viewport video section
+  // If in landing view, show the Swiss Poster Choreographed Landing Page
   if (currentView === 'landing') {
-    return <LandingPage onExplore={() => setCurrentView('dashboard')} />;
+    return <SwissLandingPage onExplore={() => setCurrentView('dashboard')} />;
   }
 
   // Dashboard View: Comprehensive EventForge Platform
