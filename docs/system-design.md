@@ -1,4 +1,4 @@
-# EventForge — Distributed System Design Specification
+# Rheos — Distributed System Design Specification
 
 > **High-Throughput Asynchronous Webhook & API Verification Gateway with Autonomous Adaptive Reliability**
 
@@ -45,7 +45,7 @@ The HTTP ingestion layer executes **zero business logic**. Its single responsibi
 sequenceDiagram
     autonumber
     participant UP as Upstream Webhook Provider
-    participant GW as EventForge Ingestion Gateway
+    participant GW as Rheos Ingestion Gateway
     participant DB as ACID Metadata Store
     participant RS as Redis Streams Broker
 
@@ -75,7 +75,7 @@ sequenceDiagram
 
 ## 3. Storage Layer & ACID Guarantees
 
-EventForge supports both PostgreSQL (production) and SQLite with WAL mode (local/benchmark). 
+Rheos supports both PostgreSQL (production) and SQLite with WAL mode (local/benchmark). 
 
 ### 3.1 Relational Schema Architecture
 

@@ -111,7 +111,7 @@ async def run_scenario_4_max_retries_to_dlq():
 
 async def run_all_scenarios():
     print("="*60)
-    print("🧪 EventForge Automated Failure & Resilience Simulator")
+    print("🧪 Rheos Automated Failure & Resilience Simulator")
     print("="*60)
     await run_scenario_2_tampered_hmac()
     await run_scenario_3_duplicate_burst()

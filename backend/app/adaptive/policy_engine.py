@@ -12,7 +12,7 @@ from backend.app.adaptive.controller import AdaptiveController
 from backend.app.database.connection import get_db_context
 from backend.app.models.event import PolicyDecisionRecord
 
-logger = logging.getLogger("eventforge.adaptive.engine")
+logger = logging.getLogger("rheos.adaptive.engine")
 
 class AdaptivePolicyEngine:
     """Core Adaptive Event Policy Engine observing telemetry and dynamically governing pipeline behavior."""

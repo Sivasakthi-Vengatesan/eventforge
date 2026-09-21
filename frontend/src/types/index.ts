@@ -162,7 +162,7 @@ export interface BenchmarkResult {
   timestamp: string;
   events_tested: number;
   static_baseline: BenchmarkMetrics;
-  adaptive_eventforge: BenchmarkMetrics;
+  adaptive_rheos: BenchmarkMetrics;
   comparison: {
     throughput_improvement_pct: number;
     p95_latency_reduction_pct: number;

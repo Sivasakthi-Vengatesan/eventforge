@@ -127,7 +127,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onExplore }) => {
                 color: '#FFFFFF',
               }}
             >
-              <span>Explore EventForge</span>
+              <span>Explore Rheos</span>
               <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1 text-white" />
             </button>
           </motion.div>

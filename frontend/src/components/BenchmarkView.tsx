@@ -29,7 +29,7 @@ export const BenchmarkView: React.FC = () => {
       retry_exhaustions: 18,
       critical_event_success_rate: 76.5
     },
-    adaptive_eventforge: {
+    adaptive_rheos: {
       total_events: 200,
       completed_events: 200,
       successful_events: 196,
@@ -67,7 +67,7 @@ export const BenchmarkView: React.FC = () => {
       }, 1500);
 
       setTimeout(() => {
-        setRunProgress('EXECUTING EVENTFORGE ADAPTIVE PIPELINE (DYNAMIC SCALING 2-8, CIRCUIT BREAKER, PRIORITY BYPASS)...');
+        setRunProgress('EXECUTING RHEOS ADAPTIVE PIPELINE (DYNAMIC SCALING 2-8, CIRCUIT BREAKER, PRIORITY BYPASS)...');
       }, 3500);
 
       setTimeout(() => {
@@ -100,7 +100,7 @@ export const BenchmarkView: React.FC = () => {
             </span>
           </div>
           <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tight text-black">
-            Static Baseline vs. Adaptive EventForge
+            Static Baseline vs. Adaptive Rheos
           </h2>
           <p className="text-sm md:text-base font-bold text-neutral-600 uppercase tracking-wide mt-2 max-w-3xl">
             Controlled empirical workload subjecting both architectures to 200 mixed-priority webhooks with 25% injected downstream failure spikes and queue pressure.
@@ -132,7 +132,7 @@ export const BenchmarkView: React.FC = () => {
             +{currentData.comparison.throughput_improvement_pct.toFixed(0)}%
           </div>
           <span className="text-[10px] font-mono font-bold uppercase text-emerald-600 mt-2 block">
-            {currentData.adaptive_eventforge.throughput_eps} vs {currentData.static_baseline.throughput_eps} EPS
+            {currentData.adaptive_rheos.throughput_eps} vs {currentData.static_baseline.throughput_eps} EPS
           </span>
         </div>
 
@@ -144,7 +144,7 @@ export const BenchmarkView: React.FC = () => {
             -{currentData.comparison.p95_latency_reduction_pct.toFixed(0)}%
           </div>
           <span className="text-[10px] font-mono font-bold uppercase text-emerald-600 mt-2 block">
-            {currentData.adaptive_eventforge.p95_latency_ms.toFixed(0)}ms vs {currentData.static_baseline.p95_latency_ms.toFixed(0)}ms
+            {currentData.adaptive_rheos.p95_latency_ms.toFixed(0)}ms vs {currentData.static_baseline.p95_latency_ms.toFixed(0)}ms
           </span>
         </div>
 
@@ -180,7 +180,7 @@ export const BenchmarkView: React.FC = () => {
             <tr className="border-b-2 border-black bg-neutral-100 uppercase font-black">
               <th className="p-4 border-r border-black">ARCHITECTURAL METRIC</th>
               <th className="p-4 border-r border-black bg-neutral-200 text-neutral-800">STATIC BASELINE PIPELINE</th>
-              <th className="p-4 bg-black text-white">EVENTFORGE ADAPTIVE PLATFORM</th>
+              <th className="p-4 bg-black text-white">RHEOS ADAPTIVE PLATFORM</th>
             </tr>
           </thead>
           <tbody>
@@ -207,12 +207,12 @@ export const BenchmarkView: React.FC = () => {
             <tr className="border-b border-black/20">
               <td className="p-4 border-r border-black font-bold uppercase">Total Batch Processing Duration</td>
               <td className="p-4 border-r border-black text-neutral-700">{currentData.static_baseline.total_duration_s}s</td>
-              <td className="p-4 font-bold text-black">{currentData.adaptive_eventforge.total_duration_s}s (75% faster)</td>
+              <td className="p-4 font-bold text-black">{currentData.adaptive_rheos.total_duration_s}s (75% faster)</td>
             </tr>
             <tr className="border-b border-black/20 bg-neutral-50">
               <td className="p-4 border-r border-black font-bold uppercase">Total Ingested Events Completed</td>
               <td className="p-4 border-r border-black text-neutral-700">{currentData.static_baseline.completed_events} / 200</td>
-              <td className="p-4 font-bold text-black">{currentData.adaptive_eventforge.completed_events} / 200 (100%)</td>
+              <td className="p-4 font-bold text-black">{currentData.adaptive_rheos.completed_events} / 200 (100%)</td>
             </tr>
             <tr>
               <td className="p-4 border-r border-black font-bold uppercase">Critical Tier Financial Loss Rate</td>

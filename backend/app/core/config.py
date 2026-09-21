@@ -10,13 +10,13 @@ class Settings(BaseSettings):
         extra="ignore"
     )
 
-    APP_NAME: str = "EventForge"
+    APP_NAME: str = "Rheos"
     API_V1_PREFIX: str = "/api/v1"
     
     # Database Configuration (PostgreSQL primary, SQLite for unit tests)
     DATABASE_URL: str = os.getenv(
         "DATABASE_URL", 
-        "postgresql+asyncpg://postgres:postgres@localhost:5432/eventforge" if os.getenv("ENV") == "production" else "sqlite+aiosqlite:///./eventforge.db"
+        "postgresql+asyncpg://postgres:postgres@localhost:5432/rheos" if os.getenv("ENV") == "production" else "sqlite+aiosqlite:///./rheos.db"
     )
 
     @field_validator("DATABASE_URL", mode="before")

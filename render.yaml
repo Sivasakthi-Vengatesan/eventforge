@@ -1,7 +1,7 @@
 services:
   # Backend API & Asynchronous Worker Gateway
   - type: web
-    name: eventforge-backend
+    name: rheos-backend
     runtime: docker
     dockerfilePath: backend/Dockerfile
     dockerContext: .
@@ -12,7 +12,7 @@ services:
         value: 8000
       - key: DATABASE_URL
         fromDatabase:
-          name: eventforge-postgres
+          name: rheos-postgres
           property: connectionString
       - key: REDIS_URL
         value: redis://localhost:6379/0
@@ -29,7 +29,7 @@ services:
 
   # Frontend Swiss International Dashboard (Static Site)
   - type: web
-    name: eventforge-frontend
+    name: rheos-frontend
     runtime: static
     rootDir: frontend
     buildCommand: npm install && npm run build
@@ -40,8 +40,8 @@ services:
         destination: /index.html
 
 databases:
-  - name: eventforge-postgres
-    databaseName: eventforge
+  - name: rheos-postgres
+    databaseName: rheos
     user: postgres
     region: oregon
     plan: free

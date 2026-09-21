@@ -4,8 +4,8 @@
   "after": "6dcb09b5b57875f334f61aebed695e2e4193db5e",
   "repository": {
     "id": 1296269,
-    "name": "eventforge",
-    "full_name": "eventforge/gateway",
+    "name": "rheos",
+    "full_name": "rheos/gateway",
     "private": false,
     "owner": {
       "name": "octocat",

@@ -228,7 +228,7 @@ export const StageRouteMap: React.FC<StageRouteMapProps> = ({ progress, onExplor
             ADAPTIVE TRAFFIC IS <span className="text-[#DC201E]">DETERMINISTICALLY ROUTED</span> AROUND CIRCUIT FAILURES
           </h3>
           <p className="font-archivo text-[14px] md:text-[15px] leading-[1.6] text-[#111010]/80 mt-2 m-0">
-            When upstream surges or downstream payment processors experience degradation, EventForge dynamically diverts load across non-congested node partitions with zero packet drop.
+            When upstream surges or downstream payment processors experience degradation, Rheos dynamically diverts load across non-congested node partitions with zero packet drop.
           </p>
         </div>
 

@@ -1,6 +1,6 @@
-# EventForge — Empirical Benchmarking & Comparative Analysis
+# Rheos — Empirical Benchmarking & Comparative Analysis
 
-> **Head-to-Head Performance Evaluation: Static Baseline Architecture vs. Adaptive EventForge**
+> **Head-to-Head Performance Evaluation: Static Baseline Architecture vs. Adaptive Rheos**
 
 ---
 
@@ -10,7 +10,7 @@ The benchmark suite (`scripts/benchmark.py`) subjects both architectures to an i
 
 ### Architectural Configurations Compared
 
-| Architectural Attribute | Static Baseline Pipeline | EventForge Adaptive Platform |
+| Architectural Attribute | Static Baseline Pipeline | Rheos Adaptive Platform |
 | :--- | :--- | :--- |
 | **Worker Concurrency** | Fixed 2 Workers (Static) | Autonomous Elastic Fleet ($2 \leftrightarrow 8$ Cores) |
 | **Priority Routing** | None (Uniform FIFO Flat Queue) | 4-Tier Adaptive Classification (`CRITICAL` Priority Bypass) |
@@ -24,7 +24,7 @@ The benchmark suite (`scripts/benchmark.py`) subjects both architectures to an i
 
 ```
 ================================================================================
-Metric                           | Static Baseline    | EventForge Adaptive   | Delta / Improvement
+Metric                           | Static Baseline    | Rheos Adaptive        | Delta / Improvement
 --------------------------------------------------------------------------------
 Total Workload Batch             | 200 Events         | 200 Events            | Identical Input
 Total Execution Duration         | 17.69s             | 15.15s                | 14.3% Faster
@@ -40,12 +40,12 @@ Duplicate Interception Rate      | 100.0%             | 100.0%                | 
 ## 3. Key Architectural Observations
 
 ### 3.1 Critical Financial Event Immunity
-Under the Static Baseline pipeline, `payment.succeeded` events queued behind slow or failing low-priority operations, causing critical payment confirmations to suffer severe latency spikes ($>14.4\text{s}$). In EventForge, the **Adaptive Priority Router** immediately routed Critical tier events to dedicated priority channels with $0\text{ms}$ backpressure delay, cutting P95 latency by $>27\%$.
+Under the Static Baseline pipeline, `payment.succeeded` events queued behind slow or failing low-priority operations, causing critical payment confirmations to suffer severe latency spikes ($>14.4\text{s}$). In Rheos, the **Adaptive Priority Router** immediately routed Critical tier events to dedicated priority channels with $0\text{ms}$ backpressure delay, cutting P95 latency by $>27\%$.
 
 ### 3.2 Elimination of Cascading Downstream Overload
 When the mock downstream service began returning HTTP 429 rate limits, the Static Baseline continued sending concurrent requests at full speed, prolonging the downstream recovery window. 
 
-EventForge's **Adaptive Policy Engine**:
+Rheos's **Adaptive Policy Engine**:
 1. Detected 429 rate exceedance $>15\%$.
 2. Autonomous transition to `DEGRADED` mode.
 3. Clamped concurrency to 2 workers and elevated the retry backoff multiplier to $3.0\times$.
@@ -56,7 +56,7 @@ EventForge's **Adaptive Policy Engine**:
 ## 4. How to Reproduce Locally
 
 ```bash
-# 1. Start the EventForge Backend Server
+# 1. Start the Rheos Backend Server
 python -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8000
 
 # 2. Run the Benchmark Suite

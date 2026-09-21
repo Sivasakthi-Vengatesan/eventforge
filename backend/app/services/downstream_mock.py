@@ -5,7 +5,7 @@ import logging
 from typing import Dict, Any, Tuple, Optional
 from backend.app.services.circuit_breaker import get_circuit_breaker, CircuitBreakerOpenException
 
-logger = logging.getLogger("eventforge.downstream_mock")
+logger = logging.getLogger("rheos.downstream_mock")
 
 class DownstreamService:
     """Simulates real downstream API interactions with circuit breaker protection and fault injection."""

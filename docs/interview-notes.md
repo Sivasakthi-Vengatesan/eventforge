@@ -1,4 +1,4 @@
-# EventForge — Staff Distributed Systems & Reliability Engineering Interview Guide
+# Rheos — Staff Distributed Systems & Reliability Engineering Interview Guide
 
 > **Deep-Dive Technical Rationales, Invariants, Failure Modes, and System Design Trade-Offs**
 
@@ -19,7 +19,7 @@ Upstream webhook dispatchers (Stripe, GitHub, Shopify) enforce strict HTTP timeo
 **Answer**:
 In distributed systems over networks that can partition or drop packets, true physical "exactly-once delivery" is impossible due to the Two Generals' Problem. 
 
-Instead, EventForge implements **at-least-once delivery with strictly idempotent consumer execution**:
+Instead, Rheos implements **at-least-once delivery with strictly idempotent consumer execution**:
 1. **At-least-once delivery**: Workers read from Redis Streams via Consumer Groups and only emit `XACK` *after* the database transaction commits and downstream processing completes.
 2. **Idempotency Filter**: Ingestion checks an atomic composite unique constraint `(provider, event_id)` in the ACID database. Duplicate events are flagged, incremented, and returned with `HTTP 202 {"status": "DUPLICATE"}` without queuing duplicate work.
 3. **Downstream Idempotency Keys**: Workers supply unique idempotency tokens to all external mutation APIs.
@@ -39,15 +39,15 @@ Batching multiple events into a single downstream database transaction or HTTP p
 **Answer**:
 When a worker reads a message via `XREADGROUP`, Redis places that message into the consumer group's **Pending Entries List (PEL)**. The message is NOT removed from the stream.
 - If the worker process crashes (SIGKILL, OOM, hardware failure) before calling `XACK`, the message remains in the PEL with an advancing idle time.
-- The EventForge `WorkerManager` periodically inspects `XPENDING`. Any message unacknowledged for $>30\text{s}$ is claimed via `XCLAIM` and assigned to a healthy worker, ensuring zero message loss.
+- The Rheos `WorkerManager` periodically inspects `XPENDING`. Any message unacknowledged for $>30\text{s}$ is claimed via `XCLAIM` and assigned to a healthy worker, ensuring zero message loss.
 
 ---
 
-### Q5: What is the thundering herd problem in retry systems and how does EventForge eliminate it?
+### Q5: What is the thundering herd problem in retry systems and how does Rheos eliminate it?
 **Answer**:
 When a downstream service suffers a temporary outage (e.g., 500 error), naive retry implementations wait a fixed interval (e.g., 2.0s) and retry all failed requests simultaneously. This creates massive synchronized traffic spikes (thundering herds) that repeatedly crash the recovering service.
 
-EventForge eliminates this through three combined mechanisms:
+Rheos eliminates this through three combined mechanisms:
 1. **Full Jitter Exponential Backoff**:
    $$t_{\text{backoff}} = \text{random}(0, \, \text{base\_delay} \cdot 2^{\text{attempt}} \cdot \mu_{\text{mode}})$$
    Decorrelating retry timestamps flattens traffic spikes into a uniform distribution.
@@ -64,7 +64,7 @@ EventForge eliminates this through three combined mechanisms:
 | **Message Ordering** | Strict per-stream | Strict per-partition | Strict per-queue |
 | **Storage Overhead** | RAM bound (Eviction / Trimming needed) | Disk bound (Petabyte scale retention) | RAM / Disk hybrid |
 | **Operational Simplicity**| Extremely lightweight (Embedded or single binary) | High (Zookeeper / KRaft cluster) | Moderate (Erlang runtime cluster) |
-| **EventForge Fit** | **Optimal** for high-throughput webhook gateway | Heavyweight for single-region services | Less native consumer group stream semantics |
+| **Rheos Fit** | **Optimal** for high-throughput webhook gateway | Heavyweight for single-region services | Less native consumer group stream semantics |
 
 ---
 

@@ -19,7 +19,7 @@ async def run_load_test(
     base_url: str = "http://127.0.0.1:8000"
 ):
     print("\n" + "="*60)
-    print("🔥 EventForge High-Throughput Load Benchmark")
+    print("🔥 Rheos High-Throughput Load Benchmark")
     print("="*60)
     print(f"Target URL:         {base_url}/api/v1/webhooks/stripe")
     print(f"Total Requests:     {count}")
@@ -101,7 +101,7 @@ async def run_load_test(
     print("="*60 + "\n")
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="EventForge Load Benchmark")
+    parser = argparse.ArgumentParser(description="Rheos Load Benchmark")
     parser.add_argument("--count", type=int, default=1000, help="Number of requests")
     parser.add_argument("--concurrency", type=int, default=50, help="Concurrency level")
     parser.add_argument("--base-url", type=str, default="http://127.0.0.1:8000", help="API URL")

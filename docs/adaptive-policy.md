@@ -1,4 +1,4 @@
-# EventForge — Adaptive Event Policy Engine Specification
+# Rheos — Adaptive Event Policy Engine Specification
 
 > **Autonomous Closed-Loop Feedback Control for Distributed Reliability**
 
@@ -12,7 +12,7 @@ Traditional event-driven worker pools rely on static parameters:
 - **Blind Exponential Retries**: Workers retry failed endpoints aggressively, worsening downstream outages.
 - **No Circuit Breaking**: Outages cause connection exhaustion across all worker threads.
 
-EventForge solves this with an **Adaptive Policy Engine** that treats event reliability as a dynamic closed-loop control problem.
+Rheos solves this with an **Adaptive Policy Engine** that treats event reliability as a dynamic closed-loop control problem.
 
 ```mermaid
 graph TD

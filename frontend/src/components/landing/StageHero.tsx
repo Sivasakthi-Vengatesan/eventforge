@@ -13,10 +13,10 @@ export const StageHero: React.FC<StageHeroProps> = ({ progress, onExplore }) => 
   const lockupLiftY = -progress * 44;
   const lockupOpacity = Math.max(0, 1 - progress * 1.2);
 
-  // Wordmark characters = 10 ('EVENTFORGE')
-  // Sizing formula: min(clamp(52px, 15vw, 220px), calc(90vw / (10 * 0.44)))
+  // Wordmark characters = 5 ('RHEOS')
+  // Sizing formula: min(clamp(52px, 15vw, 220px), calc(90vw / (5 * 0.44)))
   const wordmarkStyle: React.CSSProperties = {
-    fontSize: 'min(clamp(52px, 15vw, 220px), calc(90vw / 4.4))',
+    fontSize: 'min(clamp(52px, 15vw, 220px), calc(90vw / 2.2))',
     whiteSpace: 'nowrap',
     lineHeight: 0.88,
     letterSpacing: '-0.012em',
@@ -38,7 +38,7 @@ export const StageHero: React.FC<StageHeroProps> = ({ progress, onExplore }) => 
       <header className="relative z-10 w-full px-6 md:px-12 py-6 border-b-2 border-[#111010] flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-[#F8F3EC]/90 backdrop-blur-xs">
         <div className="flex items-center gap-3">
           <span className="font-mono text-[11px] font-bold uppercase tracking-[0.26em] text-[#111010]">
-            EVENTFORGE SPEC // v2.4
+            RHEOS SPEC // v2.4
           </span>
           <span className="w-2 h-2 bg-[#DC201E]" />
           <span className="font-mono text-[11px] uppercase tracking-[0.26em] text-[#8C8880]">
@@ -77,7 +77,7 @@ export const StageHero: React.FC<StageHeroProps> = ({ progress, onExplore }) => 
           className="font-anton font-bold uppercase text-[#111010] m-0 w-full"
           style={wordmarkStyle}
         >
-          EVENT<span className="text-[#DC201E]">FORGE</span>
+          RHE<span className="text-[#DC201E]">OS</span>
         </h1>
 
         {/* 2px Ink Rule */}

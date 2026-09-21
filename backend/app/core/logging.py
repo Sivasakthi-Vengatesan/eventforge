@@ -23,7 +23,7 @@ class StructuredFormatter(logging.Formatter):
             
         return json.dumps(log_obj)
 
-def setup_logger(name: str = "eventforge") -> logging.Logger:
+def setup_logger(name: str = "rheos") -> logging.Logger:
     logger = logging.getLogger(name)
     logger.setLevel(logging.INFO)
     

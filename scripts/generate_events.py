@@ -115,7 +115,7 @@ async def generate_events(
     invalid_signature_rate: float = 0.02,
     base_url: str = "http://127.0.0.1:8000"
 ):
-    print(f"\n🚀 EventForge Synthetic Generator: Generating {count} events...")
+    print(f"\n🚀 Rheos Synthetic Generator: Generating {count} events...")
     print(f"   Provider: {provider} | Concurrency: {concurrency} | Duplicate Rate: {duplicate_rate * 100:.1f}% | Target: {base_url}")
 
     providers = ["stripe", "razorpay", "github", "generic"] if provider == "random" else [provider]
@@ -181,14 +181,14 @@ async def generate_events(
     print("="*50 + "\n")
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="EventForge Synthetic Event Generator")
+    parser = argparse.ArgumentParser(description="Rheos Synthetic Event Generator")
     parser.add_argument("--count", type=int, default=100, help="Number of events to generate")
     parser.add_argument("--provider", type=str, default="random", choices=["stripe", "razorpay", "github", "generic", "random"])
     parser.add_argument("--concurrency", type=int, default=15, help="Concurrent HTTP workers")
     parser.add_argument("--duplicate-rate", type=float, default=0.05, help="Duplicate probability (0.0 - 1.0)")
     parser.add_argument("--failure-rate", type=float, default=0.05, help="Downstream fault probability")
     parser.add_argument("--invalid-signature-rate", type=float, default=0.02, help="Invalid HMAC probability")
-    parser.add_argument("--base-url", type=str, default="http://127.0.0.1:8000", help="EventForge API base URL")
+    parser.add_argument("--base-url", type=str, default="http://127.0.0.1:8000", help="Rheos API base URL")
 
     args = parser.parse_args()
     asyncio.run(generate_events(

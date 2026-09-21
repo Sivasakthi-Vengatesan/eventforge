@@ -16,7 +16,7 @@ from backend.app.api.v1.mock_services import router as mock_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("Initializing EventForge Distributed Gateway & Adaptive Engine...")
+    logger.info("Initializing Rheos Distributed Gateway & Adaptive Engine...")
     await init_db()
     await stream_manager.init_stream()
     
@@ -30,9 +30,9 @@ async def lifespan(app: FastAPI):
     worker_manager.start_pool(settings.WORKER_COUNT)
     metrics_collector.start()
     
-    logger.info("EventForge Adaptive Gateway is running and ready for high-throughput traffic.")
+    logger.info("Rheos Adaptive Gateway is running and ready for high-throughput traffic.")
     yield
-    logger.info("Shutting down EventForge Adaptive Gateway...")
+    logger.info("Shutting down Rheos Adaptive Gateway...")
     await policy_engine.stop()
     await worker_manager.stop_pool()
     metrics_collector.stop()
@@ -42,7 +42,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="EventForge — High-Throughput Async Webhook Gateway",
+    title="Rheos — High-Throughput Async Webhook Gateway",
     description=(
         "Production-grade distributed webhook ingestion, HMAC security verification, "
         "and asynchronous event processing gateway powered by Redis Streams, PostgreSQL, "
@@ -89,7 +89,7 @@ async def websocket_monitoring_endpoint(websocket: WebSocket):
 @app.get("/")
 async def root():
     return {
-        "name": "EventForge Gateway",
+        "name": "Rheos Gateway",
         "status": "OPERATIONAL",
         "docs": "/docs",
         "api_v1": "/api/v1",

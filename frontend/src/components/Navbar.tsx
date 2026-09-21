@@ -48,7 +48,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onNavigate, onGoHome }) => {
         title="Return to Landing Page"
       >
         <span className="text-[21px] sm:text-[24px] tracking-tight text-black font-black select-none uppercase">
-          EventForge
+          Rheos
         </span>
         <span className="text-[22px] sm:text-[26px] text-swiss-accent select-none font-black leading-none group-hover:rotate-45 transition-transform duration-300">
           ◆

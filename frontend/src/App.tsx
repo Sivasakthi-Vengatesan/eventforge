@@ -12,7 +12,7 @@ import { BenchmarkView } from './components/BenchmarkView';
 import { DLQManager } from './components/DLQManager';
 import { LiveGenerator } from './components/LiveGenerator';
 import { SystemHealth } from './components/SystemHealth';
-import { useEventForgeWS } from './hooks/useEventForgeWS';
+import { useRheosWS } from './hooks/useRheosWS';
 
 import { SwissLandingPage } from './components/landing/SwissLandingPage';
 
@@ -30,7 +30,7 @@ export function App() {
     "Adaptive Policy Engine"
   ]);
 
-  const { isConnected, metrics } = useEventForgeWS();
+  const { isConnected, metrics } = useRheosWS();
 
   const handleToggleService = (service: string) => {
     setSelectedServices((prev) =>
@@ -52,7 +52,7 @@ export function App() {
     return <SwissLandingPage onExplore={() => setCurrentView('dashboard')} />;
   }
 
-  // Dashboard View: Comprehensive EventForge Platform
+  // Dashboard View: Comprehensive Rheos Platform
   return (
     <div className="relative bg-white text-neutral-900 font-sans selection:bg-[#EAECE9] selection:text-[#1C2E1E] antialiased overflow-x-hidden flex flex-col lg:block lg:min-h-screen">
       {/* Interactive Navbar */}
@@ -95,7 +95,7 @@ export function App() {
       {/* 07. AUDIT TRAIL — Real-Time Event Ledger & Inspect */}
       <EventExplorer />
 
-      {/* 08. EMPIRICAL BENCHMARK — Static Baseline vs. Adaptive EventForge */}
+      {/* 08. EMPIRICAL BENCHMARK — Static Baseline vs. Adaptive Rheos */}
       <BenchmarkView />
 
       {/* 09. FAULT ISOLATION — Dead Letter Queue Quarantine */}
@@ -112,7 +112,7 @@ export function App() {
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
           <div>
             <div className="flex items-center gap-3">
-              <span className="text-2xl font-black tracking-tight text-white uppercase">EventForge</span>
+              <span className="text-2xl font-black tracking-tight text-white uppercase">Rheos</span>
               <span className="text-swiss-accent text-xl">◆</span>
               <span className="text-xs font-mono font-bold uppercase tracking-widest text-neutral-400">
                 SWISS SPEC v2.4

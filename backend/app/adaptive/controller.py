@@ -2,7 +2,7 @@ import logging
 from typing import Dict, Any, Optional
 from backend.app.adaptive.policy_rules import SystemMode, TransitionDecision
 
-logger = logging.getLogger("eventforge.adaptive.controller")
+logger = logging.getLogger("rheos.adaptive.controller")
 
 class AdaptiveController:
     """Executes actions dictated by the Adaptive Policy Engine."""

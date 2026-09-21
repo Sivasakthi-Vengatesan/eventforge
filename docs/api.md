@@ -1,4 +1,4 @@
-# EventForge API Reference
+# Rheos API Reference
 
 ## Base URLs
 - **HTTP**: `http://localhost:8000/api/v1`

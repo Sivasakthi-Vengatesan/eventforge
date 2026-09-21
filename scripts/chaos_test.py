@@ -1,5 +1,5 @@
 """
-EventForge Chaos Engineering & Failure Simulator Suite
+Rheos Chaos Engineering & Failure Simulator Suite
 Executes 10 realistic distributed resilience scenarios against the live gateway.
 """
 
@@ -175,7 +175,7 @@ async def run_scenario_10_recovery(client: httpx.AsyncClient):
         print(f"System State: Mode={data.get('current_mode')} | Active Workers={data.get('active_workers')} | Error Rate={data.get('error_rate')}")
 
 async def main():
-    parser = argparse.ArgumentParser(description="EventForge Chaos Engineering Suite")
+    parser = argparse.ArgumentParser(description="Rheos Chaos Engineering Suite")
     parser.add_argument("--scenario", default="all", help="Scenario number (1-10) or 'all'")
     args = parser.parse_args()
 
@@ -197,7 +197,7 @@ async def main():
         try:
             health = await client.get(f"{BASE_URL}/api/v1/health")
             if health.status_code != 200:
-                print("EventForge backend is not running at http://127.0.0.1:8000")
+                print("Rheos backend is not running at http://127.0.0.1:8000")
                 return
         except Exception as e:
             print(f"Connection error: {e}. Please start backend first.")
@@ -205,7 +205,7 @@ async def main():
 
         if args.scenario == "all":
             print("=================================================================")
-            print("         EVENTFORGE 10-SCENARIO CHAOS ENGINEERING SUITE          ")
+            print("         RHEOS 10-SCENARIO CHAOS ENGINEERING SUITE              ")
             print("=================================================================")
             for idx in range(1, 11):
                 func = scenarios[str(idx)]

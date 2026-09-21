@@ -3,7 +3,7 @@ import logging
 from datetime import datetime, timezone
 from typing import Dict, Any, Optional
 
-logger = logging.getLogger("eventforge.circuit_breaker")
+logger = logging.getLogger("rheos.circuit_breaker")
 
 class CircuitBreakerOpenException(Exception):
     pass

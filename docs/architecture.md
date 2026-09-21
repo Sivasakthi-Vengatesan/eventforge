@@ -1,8 +1,8 @@
-# EventForge Architecture Specification
+# Rheos Architecture Specification
 
 ## Overview
 
-EventForge is an asynchronous webhook ingestion and processing gateway. It decouples high-throughput external webhook delivery from slower downstream business logic and third-party APIs.
+Rheos is an asynchronous webhook ingestion and processing gateway. It decouples high-throughput external webhook delivery from slower downstream business logic and third-party APIs.
 
 ```mermaid
 flowchart LR

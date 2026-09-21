@@ -1,5 +1,5 @@
 """
-EventForge Static vs. Adaptive Empirical Benchmark Suite
+Rheos Static vs. Adaptive Empirical Benchmark Suite
 Runs identical workload streams under normal and failure conditions and measures real metrics.
 """
 
@@ -89,12 +89,12 @@ async def run_workload(client: httpx.AsyncClient, count: int, failure_rate: floa
     }
 
 async def main():
-    parser = argparse.ArgumentParser(description="EventForge Benchmark")
+    parser = argparse.ArgumentParser(description="Rheos Benchmark")
     parser.add_argument("--events", type=int, default=200, help="Number of benchmark events")
     args = parser.parse_args()
 
     print("=========================================================================")
-    print("        EVENTFORGE EMPIRICAL BENCHMARK: STATIC vs. ADAPTIVE MODE         ")
+    print("        RHEOS EMPIRICAL BENCHMARK: STATIC vs. ADAPTIVE MODE              ")
     print("=========================================================================")
     print(f"Workload: {args.events} Mixed Events | Ingestion Budget: <10ms | Target: 127.0.0.1:8000\n")
 

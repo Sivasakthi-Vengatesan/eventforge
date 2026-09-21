@@ -1,6 +1,6 @@
-# EventForge
+# Rheos
 
-> **High-Throughput Asynchronous Webhook Ingestion, Adaptive Event Orchestration, and Fault-Tolerant Distributed Delivery Platform.**
+**Adaptive Event Ingestion, Orchestration, and Fault-Tolerant Delivery Platform**
 
 [![Python](https://img.shields.io/badge/Python-3.11%20%7C%203.12-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-009688?style=flat-square&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
@@ -14,9 +14,9 @@
 
 ## 1. Value Proposition & Problem Scope
 
-**EventForge** is a production-grade distributed event ingestion and processing gateway engineered to eliminate the classic pitfalls of webhook handling: **ingestion timeouts, unhandled burst surges, duplicate transaction charging, and cascading downstream outages**.
+**Rheos** is a production-grade distributed event ingestion and processing gateway engineered to eliminate the classic pitfalls of webhook handling: **ingestion timeouts, unhandled burst surges, duplicate transaction charging, and cascading downstream outages**.
 
-In traditional architectures, synchronous webhook handlers process business logic inline, leading to dropped connection errors during downstream latency spikes, repeated webhook retries from providers (e.g., Stripe, Razorpay, GitHub), and catastrophic duplicate state mutations. EventForge decouples high-speed HTTP ingestion ($<10\text{ms}$ budget) from execution via **Redis Streams**, applies **atomic composite idempotency filters**, runs a **closed-loop adaptive policy engine** to throttle or scale workers ($2 \leftrightarrow 8$ cores) dynamically, and isolates poison payloads into an auditable **Dead Letter Queue (DLQ)**.
+In traditional architectures, synchronous webhook handlers process business logic inline, leading to dropped connection errors during downstream latency spikes, repeated webhook retries from providers (e.g., Stripe, Razorpay, GitHub), and catastrophic duplicate state mutations. Rheos decouples high-speed HTTP ingestion ($<10\text{ms}$ budget) from execution via **Redis Streams**, applies **atomic composite idempotency filters**, runs a **closed-loop adaptive policy engine** to throttle or scale workers ($2 \leftrightarrow 8$ cores) dynamically, and isolates poison payloads into an auditable **Dead Letter Queue (DLQ)**.
 
 ---
 
@@ -132,7 +132,7 @@ flowchart TD
 
 *Empirical benchmarking conducted via `scripts/benchmark.py` running on 8 cores, 16GB RAM with 200 randomized mixed-tier webhook payloads:*
 
-| Performance Metric | Static Fixed Pipeline | EventForge Adaptive Engine | Architectural Impact |
+| Performance Metric | Static Fixed Pipeline | Rheos Adaptive Engine | Architectural Impact |
 |---|---|---|---|
 | **Worker Concurrency** | Fixed 2 Workers (Static) | Adaptive ($2 \leftrightarrow 8$ Cores) | Automated Elastic Fleet Scaling |
 | **Ingestion Latency (p95)** | $8.40\text{ ms}$ | **$4.12\text{ ms}$** | **$50.9\%$ Faster Ingestion Response** |
@@ -153,8 +153,8 @@ flowchart TD
 
 ```bash
 # 1. Clone repository
-git clone https://github.com/Sivasakthi-Vengatesan/eventforge.git
-cd eventforge
+git clone https://github.com/Sivasakthi-Vengatesan/rheos.git
+cd rheos
 
 # 2. Start full distributed stack (PostgreSQL + Redis + Backend + Frontend)
 docker compose up --build -d

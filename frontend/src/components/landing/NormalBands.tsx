@@ -247,7 +247,7 @@ export const NormalBands: React.FC<NormalBandsProps> = ({ onExplore }) => {
           <details className="group py-6 cursor-pointer" data-rev style={{ '--d': '60ms' } as React.CSSProperties}>
             <summary className="flex items-center justify-between select-none">
               <span className="font-anton uppercase text-xl sm:text-2xl text-[#111010] tracking-[-0.012em]">
-                HOW DOES EVENTFORGE PREVENT DATA LOSS WHEN DOWNSTREAM SERVICES CRASH?
+                HOW DOES RHEOS PREVENT DATA LOSS WHEN DOWNSTREAM SERVICES CRASH?
               </span>
               <span className="font-mono text-2xl text-[#DC201E] font-bold transition-transform duration-200 group-open:rotate-45 leading-none px-2">
                 +
@@ -269,7 +269,7 @@ export const NormalBands: React.FC<NormalBandsProps> = ({ onExplore }) => {
               </span>
             </summary>
             <div className="mt-4 pt-2 pr-12 font-archivo text-[15px] leading-[1.6] text-[#111010]/80">
-              No. EventForge implements an atomic two-phase idempotency guarantee. Before worker dispatch, each payload’s idempotency key or SHA-256 body hash is verified via distributed Redis locks with a 24-hour TTL. Duplicate deliveries are acknowledged immediately to sender but filtered from queue dispatch.
+              No. Rheos implements an atomic two-phase idempotency guarantee. Before worker dispatch, each payload’s idempotency key or SHA-256 body hash is verified via distributed Redis locks with a 24-hour TTL. Duplicate deliveries are acknowledged immediately to sender but filtered from queue dispatch.
             </div>
           </details>
 
@@ -299,7 +299,7 @@ export const NormalBands: React.FC<NormalBandsProps> = ({ onExplore }) => {
               </span>
             </summary>
             <div className="mt-4 pt-2 pr-12 font-archivo text-[15px] leading-[1.6] text-[#111010]/80">
-              Poison payloads that fail schema validation or throw unhandled exceptions are quarantined to our Dead Letter Queue (DLQ). Operators can view full stack traces, inspect raw payload bytes, and trigger single-item or bulk replays directly through the EventForge interactive console.
+              Poison payloads that fail schema validation or throw unhandled exceptions are quarantined to our Dead Letter Queue (DLQ). Operators can view full stack traces, inspect raw payload bytes, and trigger single-item or bulk replays directly through the Rheos interactive console.
             </div>
           </details>
         </div>
@@ -346,7 +346,7 @@ export const NormalBands: React.FC<NormalBandsProps> = ({ onExplore }) => {
       <footer className="w-full border-t-2 border-[#111010] bg-[#F1EBE1] py-8 px-6 md:px-12">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 font-mono text-[11px] uppercase tracking-[0.26em] text-[#8C8880]">
           <div className="flex items-center gap-3">
-            <span className="text-[#111010] font-bold">EVENTFORGE</span>
+            <span className="text-[#111010] font-bold">RHEOS</span>
             <span>//</span>
             <span>SWISS POSTER SYSTEM</span>
           </div>

@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { SystemMetrics } from '../types';
 
-export function useEventForgeWS(onEventReceived?: (data: any) => void) {
+export function useRheosWS(onEventReceived?: (data: any) => void) {
   const [isConnected, setIsConnected] = useState(false);
   const [metrics, setMetrics] = useState<SystemMetrics | null>(null);
   const wsRef = useRef<WebSocket | null>(null);

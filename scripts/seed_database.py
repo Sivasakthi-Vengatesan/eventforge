@@ -15,7 +15,7 @@ from backend.app.models.dlq import DeadLetterEvent
 from backend.app.models.worker import Worker, WorkerStatus
 
 async def seed_data():
-    print("🌱 Seeding EventForge database with initial realistic history...")
+    print("🌱 Seeding Rheos database with initial realistic history...")
     await init_db()
     async with AsyncSessionLocal() as session:
         # Seed workers (upsert)

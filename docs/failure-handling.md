@@ -1,8 +1,8 @@
-# EventForge Failure Handling & Resilience Guide
+# Rheos Failure Handling & Resilience Guide
 
 ## 1. Failure Classification
 
-EventForge categorizes all downstream failures into two distinct classes:
+Rheos categorizes all downstream failures into two distinct classes:
 
 | Error Type | Status Codes / Errors | Action |
 |---|---|---|
@@ -13,7 +13,7 @@ EventForge categorizes all downstream failures into two distinct classes:
 
 ## 2. Exponential Backoff with Full Jitter Formula
 
-To avoid thundering herd problems where all retrying workers hammer downstream APIs at identical intervals, EventForge implements the Full Jitter backoff algorithm:
+To avoid thundering herd problems where all retrying workers hammer downstream APIs at identical intervals, Rheos implements the Full Jitter backoff algorithm:
 
 $$\text{Delay} = \min\left(60.0,\, \text{BaseDelay} \times 2^{\text{attempt} - 1} + \text{random}(0.1, \max(0.5, \text{ExponentialDelay} \times 0.2))\right)$$
 
