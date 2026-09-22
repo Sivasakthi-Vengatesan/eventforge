@@ -34,52 +34,179 @@ In traditional architectures, synchronous webhook handlers process business logi
 
 ---
 
-## 3. Visual Architecture Diagram
+## 3. Visual Architecture & System Diagrams
 
-### 3.1 End-to-End Event Lifecycle Flow
+### 3.1 End-to-End Distributed Architecture & Event Lifecycle
 
 ```mermaid
 flowchart TD
-    subgraph Ingestion["1. Ingestion Gateway (SLA: <10ms)"]
-        PROD["Upstream Webhook Providers<br/>(Stripe, Razorpay, GitHub, Custom)"] -->|HTTPS POST| GW["FastAPI Ingestion Gateway"]
-        GW --> HMAC["HMAC-SHA256 Verifier<br/>(Constant-Time Comparison)"]
-        HMAC --> IDEM["Atomic Idempotency Filter<br/>(Provider + EventID Constraint)"]
-        IDEM --> PRIORITY["Priority Classifier<br/>(CRITICAL, HIGH, NORMAL, LOW)"]
+    %% Upstream Ingestion Tier
+    subgraph IngestionTier["1. Ingestion Gateway (SLA: < 10ms)"]
+        direction TB
+        PROV["Upstream Webhook Sources<br/><code>Stripe | Razorpay | GitHub | Custom</code>"] -->|HTTPS POST| FASTAPI["FastAPI Ingestion Gateway<br/><code>/api/v1/webhooks/{provider}</code>"]
+        FASTAPI --> HMAC{"HMAC-SHA256<br/>Signature Check"}
+        HMAC -- Invalid Signature --> REJ_401["HTTP 401 Unauthorized<br/>(Drop & Security Log)"]
+        HMAC -- Valid Signature --> IDEMP{"Atomic Idempotency<br/><code>(provider, event_id)</code>"}
+        IDEMP -- Duplicate Detected --> DUPE_202["HTTP 202 Duplicate<br/>(No Re-Execution)"]
+        IDEMP -- New Event --> CLASSIFY["Priority Classifier<br/><code>CRITICAL | HIGH | NORMAL | LOW</code>"]
     end
 
-    subgraph Broker["2. Message Broker & Stream Storage"]
-        PRIORITY -->|XADD Stream Payload| RSTREAM[("Redis Streams Engine<br/>Consumer Groups + PEL")]
-        RSTREAM -.->|HTTP 202 Accepted| PROD
+    %% Stream Broker Tier
+    subgraph BrokerTier["2. Redis Streams Message Broker & Storage"]
+        direction TB
+        CLASSIFY -->|XADD Stream Payload| RSTREAM[("Redis Streams Engine<br/><code>mystream:events</code>")]
+        RSTREAM -.->|Instant Acknowledgment<br/>HTTP 202 Accepted| FASTAPI
+        
+        PEL_MON["PEL Auto-Claim Supervisor<br/><code>XPENDING / XCLAIM (30s timeout)</code>"] -.->|Rescue Orphaned Events| RSTREAM
     end
 
-    subgraph ControlPlane["3. Adaptive Policy & Telemetry Monitor"]
-        RSTREAM -.->|Queue Metrics| ENGINE["Adaptive Policy Engine (FSM)"]
-        ENGINE --> FSM{"System State"}
-        FSM -- "Normal" --> S_NORM["NORMAL: 4 Workers, 0ms Delay"]
-        FSM -- "Queue Spike" --> S_PRES["PRESSURE: 8 Workers, 50ms Low-Tier Delay"]
-        FSM -- "429 / Outage" --> S_DEG["DEGRADED: 2 Workers, 3x Retry Backoff"]
-        FSM -- "Stabilizing" --> S_REC["RECOVERY: Canary Step-Up Probes"]
+    %% Adaptive Control Plane
+    subgraph ControlPlane["3. Closed-Loop Adaptive Policy Engine (FSM)"]
+        direction TB
+        TELEMETRY["Live Telemetry Collector<br/><code>Queue Depth, p95 Latency, 429 Error Rate</code>"] <-->|Real-time Metrics| RSTREAM
+        TELEMETRY --> FSM_DECIDE{"Adaptive Policy<br/>FSM Evaluator"}
+        
+        FSM_DECIDE -->|Normal Load| ST_NORM["NORMAL State<br/>• 4 Workers<br/>• 0ms Delay"]
+        FSM_DECIDE -->|Q > 100 or Latency Spike| ST_PRES["PRESSURE State<br/>• Scale to 8 Workers<br/>• 50ms Low-Tier Delay"]
+        FSM_DECIDE -->|Downstream 429 > 15%| ST_DEG["DEGRADED State<br/>• Scale to 2 Workers<br/>• 3.0x Backoff Multiplier"]
+        FSM_DECIDE -->|Metrics Stabilized| ST_REC["RECOVERY State<br/>• Step-Up Canary Probes<br/>• Drain Lag Safely"]
     end
 
-    subgraph Execution["4. Distributed Worker Fleet"]
-        S_NORM & S_PRES & S_DEG & S_REC -.->|Scale / Actuate| W_POOL["Worker Fleet (2 ↔ 8 Elastic Async Cores)"]
-        RSTREAM -->|XREADGROUP| W_POOL
-        W_POOL --> CB_CHECK{"Circuit Breaker<br/>State"}
-        CB_CHECK -- "CLOSED" --> DOWNSTREAM["Downstream Target API / Microservices"]
-        CB_CHECK -- "OPEN (Tripped)" --> RETRY_SCHED["Exponential Backoff Retry Engine<br/>(Full Jitter Multiplier)"]
+    %% Distributed Worker Fleet
+    subgraph WorkerFleet["4. Elastic Worker Fleet & Circuit Breaker"]
+        direction TB
+        ST_NORM & ST_PRES & ST_DEG & ST_REC ==>|Actuate Fleet Concurrency| WORKERS["Elastic Async Workers<br/><code>2 ↔ 8 Dynamic Worker Pool</code>"]
+        RSTREAM -->|XREADGROUP Consumer Group| WORKERS
+        
+        WORKERS --> CB_EVAL{"Circuit Breaker<br/>Evaluation"}
+        CB_EVAL -- "OPEN (Tripped)" --> CB_FAIL["Fail-Fast Re-Queue<br/>(Cooldown: 5.0s)"]
+        CB_EVAL -- "CLOSED / HALF-OPEN" --> DISPATCH["Target Downstream API / Handler<br/><code>POST /api/v1/internal/execute</code>"]
     end
 
-    subgraph Persistence["5. Persistence & Dead Letter Quarantine"]
-        DOWNSTREAM -- "Success" --> DB_STORE[("PostgreSQL / SQLite<br/>Processed Events Ledger")]
-        DOWNSTREAM -- "Exhausted Retries / 400 Bad Schema" --> DLQ[("Dead Letter Queue (DLQ)<br/>Poison-Pill Quarantine Store")]
-        DLQ --> REPLAY["DLQ Manager / Manual Replay Tool"]
+    %% Persistence & Quarantine
+    subgraph PersistenceTier["5. ACID Persistence & Dead Letter Queue (DLQ)"]
+        direction TB
+        DISPATCH -- "HTTP 200/201 OK" --> XACK["XACK Redis Stream"]
+        XACK --> DB_AUDIT[("PostgreSQL / SQLite<br/>Audit & Event Ledger")]
+        
+        DISPATCH -- "HTTP 5xx / 429 Timeout" --> RETRY_ENG["Exponential Jitter Retry Engine<br/><code>t = base * 2^n + jitter(0,1)</code>"]
+        RETRY_ENG -->|Retries <= 5| RSTREAM
+        RETRY_ENG -- "Retries > 5" --> DLQ_STORE[("Dead Letter Queue (DLQ)<br/>Quarantine Store with Stack Trace")]
+        DISPATCH -- "HTTP 400 Bad Schema" --> DLQ_STORE
+        
+        DLQ_STORE --> REPLAY_TOOL["DLQ Sanitization & Replay Tool<br/><code>POST /api/v1/dlq/{id}/replay</code>"]
+        REPLAY_TOOL -.->|Re-Inject Validated Event| RSTREAM
     end
 
-    style Ingestion fill:#1e1e2e,stroke:#89b4fa,stroke-width:2px,color:#cdd6f4
-    style Broker fill:#1e1e2e,stroke:#fab387,stroke-width:2px,color:#cdd6f4
-    style ControlPlane fill:#1e1e2e,stroke:#cba6f7,stroke-width:2px,color:#cdd6f4
-    style Execution fill:#1e1e2e,stroke:#a6e3a1,stroke-width:2px,color:#cdd6f4
-    style Persistence fill:#1e1e2e,stroke:#eba0ac,stroke-width:2px,color:#cdd6f4
+    %% Styling Definitions
+    style IngestionTier fill:#1a1c23,stroke:#60a5fa,stroke-width:2px,color:#f3f4f6
+    style BrokerTier fill:#1a1c23,stroke:#f59e0b,stroke-width:2px,color:#f3f4f6
+    style ControlPlane fill:#1a1c23,stroke:#a78bfa,stroke-width:2px,color:#f3f4f6
+    style WorkerFleet fill:#1a1c23,stroke:#34d399,stroke-width:2px,color:#f3f4f6
+    style PersistenceTier fill:#1a1c23,stroke:#f87171,stroke-width:2px,color:#f3f4f6
+    
+    style PROV fill:#2d3748,stroke:#cbd5e1,color:#f8fafc
+    style FASTAPI fill:#1e3a8a,stroke:#3b82f6,color:#ffffff
+    style RSTREAM fill:#7c2d12,stroke:#ea580c,color:#ffffff
+    style WORKERS fill:#064e3b,stroke:#059669,color:#ffffff
+    style DB_AUDIT fill:#1e293b,stroke:#38bdf8,color:#ffffff
+    style DLQ_STORE fill:#450a0a,stroke:#dc2626,color:#ffffff
+```
+
+---
+
+### 3.2 Adaptive Policy Engine State Transitions (FSM)
+
+```mermaid
+stateDiagram-v2
+    [*] --> NORMAL
+
+    NORMAL --> PRESSURE : Queue Depth > 100 OR Latency p95 > 200ms
+    PRESSURE --> NORMAL : Queue Depth < 20 AND Latency p95 < 50ms
+    
+    NORMAL --> DEGRADED : Downstream 429 Rate > 15% OR Circuit Breaker OPEN
+    PRESSURE --> DEGRADED : Downstream 429 Rate > 15% OR Downstream 500s > 25%
+    
+    DEGRADED --> RECOVERY : 429 Rate == 0% for Cooldown Window (10s)
+    RECOVERY --> NORMAL : Canary Probes 100% Succeeded (5 consecutive)
+    RECOVERY --> DEGRADED : Canary Probe Failed (429 / 5xx error)
+
+    state NORMAL {
+        [*] --> Normal_Config
+        Normal_Config : Concurrency = 4 Workers
+        Normal_Config : Low-Tier Throttle = 0ms
+        Normal_Config : Retry Multiplier = 1.0x
+    }
+
+    state PRESSURE {
+        [*] --> Pressure_Config
+        Pressure_Config : Concurrency = 8 Workers (Scaled Up)
+        Pressure_Config : Low-Tier Throttle = 50ms
+        Pressure_Config : Batch Low Priority Events
+    }
+
+    state DEGRADED {
+        [*] --> Degraded_Config
+        Degraded_Config : Concurrency = 2 Workers (Shed Load)
+        Degraded_Config : Retry Multiplier = 3.0x Backpressure
+        Degraded_Config : Pause Non-Critical Ingestion
+    }
+
+    state RECOVERY {
+        [*] --> Recovery_Config
+        Recovery_Config : Concurrency = 3 Workers (Gradual Ramp)
+        Recovery_Config : Canary Verification Mode
+    }
+```
+
+---
+
+### 3.3 Asynchronous Ingestion vs Background Execution Sequence
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Provider as Webhook Provider (Stripe/GitHub)
+    participant Gateway as FastAPI Ingestion (<10ms)
+    participant Redis as Redis Streams (PEL)
+    participant FSM as Adaptive Policy Engine
+    participant Worker as Elastic Worker Fleet
+    participant Downstream as Target Service / API
+    participant DB as PostgreSQL Ledger / DLQ
+
+    rect rgb(30, 41, 59)
+        Note over Provider, Gateway: Synchronous Ingestion Window (< 10ms budget)
+        Provider->>Gateway: POST /api/v1/webhooks/{provider} (HMAC Header + JSON)
+        Gateway->>Gateway: Verify HMAC signature (constant-time)
+        Gateway->>Gateway: Check Idempotency (provider + event_id)
+        Gateway->>Redis: XADD mystream:events (Priority tagged)
+        Redis-->>Gateway: Event ID generated (e.g. 1727000000000-0)
+        Gateway-->>Provider: HTTP 202 Accepted {"status":"QUEUED","id":"..."}
+    end
+
+    rect rgb(20, 83, 45)
+        Note over Redis, DB: Asynchronous Worker Execution Loop
+        FSM->>Redis: Monitor Queue Depth & Rate Limit Errors
+        FSM->>Worker: Tune Concurrency (2 to 8 Workers)
+        Worker->>Redis: XREADGROUP Consumer Group (Block 2s)
+        Redis-->>Worker: Deliver Event Payload
+        Worker->>Worker: Check Downstream Circuit Breaker
+        alt Circuit Breaker CLOSED
+            Worker->>Downstream: POST /execute (Event Payload)
+            alt Success (HTTP 200/201)
+                Downstream-->>Worker: HTTP 200 OK
+                Worker->>Redis: XACK mystream:events EventID
+                Worker->>DB: INSERT into events (Status: COMPLETED)
+            else Downstream 429 / 5xx Failure
+                Downstream-->>Worker: HTTP 429 Too Many Requests
+                Worker->>FSM: Increment 429 Error Counter
+                Worker->>Redis: Schedule Retry with Exponential Jitter
+            end
+        else Max Retries Exceeded (>5 attempts)
+            Worker->>DB: INSERT into DLQ (Poison payload + Stack trace)
+            Worker->>Redis: XACK mystream:events EventID (Quarantined)
+        end
+    end
 ```
 
 ---
@@ -153,8 +280,8 @@ flowchart TD
 
 ```bash
 # 1. Clone repository
-git clone https://github.com/Sivasakthi-Vengatesan/rheos.git
-cd rheos
+git clone https://github.com/Sivasakthi-Vengatesan/eventforge.git
+cd eventforge
 
 # 2. Start full distributed stack (PostgreSQL + Redis + Backend + Frontend)
 docker compose up --build -d
