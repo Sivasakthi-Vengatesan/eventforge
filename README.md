@@ -364,6 +364,12 @@ python scripts/benchmark.py --events 200
 
 ---
 
-## 9. License
+## 9. Contributing & Support
+
+Contributions, bug reports, and feature requests are welcome! Please feel free to open an issue or submit a pull request.
+
+---
+
+## 10. License
 
 Distributed under the **MIT License**. See [LICENSE](LICENSE) for details.
